@@ -5,23 +5,24 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
 @Service
 public class FileServiceImpl implements FileService {
 
-private final Path rootLocation;
+    private final Path rootLocation;
 
     @Autowired
     public FileServiceImpl(ApplicationProperties properties) {
-        this.rootLocation = Paths.get(properties.getLocation());
+        rootLocation = Paths.get(properties.getLocation());
     }
 
     @Override
@@ -39,15 +40,14 @@ private final Path rootLocation;
     }
 
     @Override
-    public void store(MultipartFile file) {
+    public void store(InputStream file, String fileName) {
 
         try {
-            if (file.isEmpty()) {
-                throw new ApplicationException("File not stored because file empty: " + file.getOriginalFilename());
-            }
-            Files.copy(file.getInputStream(), this.rootLocation.resolve(file.getOriginalFilename()));
+            Path targetFile = rootLocation.resolve(fileName);
+            long bytesWritten = Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Wrote " +  targetFile + " [ " + bytesWritten + " bytes ] to the filesystem!");
         } catch (IOException e) {
-            throw new ApplicationException("Failed to store file: " + file.getOriginalFilename(), e);
+            throw new ApplicationException("Failed to store file: " + fileName, e);
         }
         
     }

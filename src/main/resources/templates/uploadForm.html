@@ -19,6 +19,15 @@
 	</div>
 
 	<div>
+		<form method="POST" enctype="multipart/form-data" action="/rest/file/upload">
+			<table>
+				<tr><td>File to upload:</td><td><input type="file" name="asyncfile" /></td></tr>
+				<tr><td></td><td><input type="submit" value="Async Upload" /></td></tr>
+			</table>
+		</form>
+	</div>
+
+	<div>
 		<ul>
 			<li th:each="file : ${files}">
 				<span th:text="${file}" />

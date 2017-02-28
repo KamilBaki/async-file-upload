@@ -1,6 +1,5 @@
 package async.file.upload;
 
-import async.file.upload.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.context.request.async.WebAsyncTask;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.stream.Collectors;
 import java.util.concurrent.Callable;
 import java.time.LocalDateTime;
@@ -28,12 +28,9 @@ public class FileUploadController {
 
     @GetMapping("/")
     public String listUploadedFiles(Model model) throws IOException {
-
-        System.out.println(LocalDateTime.now() + " : Begin listUploadedFiles!");
         model.addAttribute("files", fileService
                 .listAll()
                 .collect(Collectors.toList()));
-        System.out.println(LocalDateTime.now() + " : Finish preparing file list!");
 
         return "uploadForm";
     }
@@ -41,8 +38,14 @@ public class FileUploadController {
     @PostMapping("/")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
+        final String filename = file.getOriginalFilename();
 
-        fileService.store(file);
+        try (final InputStream inputStream = file.getInputStream()) {
+            fileService.store(inputStream, filename);
+        } catch (IOException ex) {
+            throw new ApplicationException("File handling error!", ex);
+        }
+
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
